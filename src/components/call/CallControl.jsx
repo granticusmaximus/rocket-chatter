@@ -1,0 +1,64 @@
+import { useAuth } from "../../context/AuthContext";
+import { useChat } from "../../context/ChatContext";
+import axios from "axios";
+
+export default function CallControl() {
+  const { currentUser } = useAuth();
+  const { activeUser, setShowCallPanel, setActiveCallId } = useChat();
+
+  const handleCall = async () => {
+    if (!activeUser) return;
+
+    const callId = `${currentUser.uid}_${activeUser.uid}`;
+
+    const peerConnection = new RTCPeerConnection({
+      iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
+    });
+
+    const localStream = await navigator.mediaDevices.getUserMedia({
+      video: true,
+      audio: true,
+    });
+
+    localStream.getTracks().forEach((track) => {
+      peerConnection.addTrack(track, localStream);
+    });
+
+    const offer = await peerConnection.createOffer();
+    await peerConnection.setLocalDescription(offer);
+
+    await axios.post("http://localhost:5000/api/calls", {
+      callId,
+      from: currentUser.uid,
+      to: activeUser.uid,
+      offer: {
+        type: offer.type,
+        sdp: offer.sdp,
+      },
+      createdAt: Date.now(),
+    });
+
+    setActiveCallId(callId);
+    setShowCallPanel(true);
+
+    console.log("Call offer created");
+  };
+
+  return (
+    <button onClick={handleCall} style={styles.button}>
+      📞 Call
+    </button>
+  );
+}
+
+const styles = {
+  button: {
+    marginBottom: "1rem",
+    padding: "0.5rem 1rem",
+    backgroundColor: "#007bff",
+    color: "white",
+    border: "none",
+    borderRadius: "4px",
+    cursor: "pointer",
+  },
+};
