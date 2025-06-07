@@ -4,6 +4,7 @@ import { useAuth } from "../../context/AuthContext";
 import CallPanel from "./CallPanel";
 import { useChat } from "../../context/ChatContext";
 import { useToast } from "../../context/ToastContext";
+import { Button } from "reactstrap";
 
 export default function CallModal() {
   const { showCallPanel, activeCallId, setShowCallPanel } = useChat();
@@ -29,9 +30,9 @@ export default function CallModal() {
     <div style={styles.backdrop}>
       <div style={styles.panel}>
         <CallPanel callId={activeCallId} />
-        <button style={styles.close} onClick={handleEndCall}>
+        <Button color="danger" onClick={handleEndCall}>
           End Call
-        </button>
+        </Button>
       </div>
     </div>
   );
@@ -52,14 +53,5 @@ const styles = {
     padding: "1rem",
     borderRadius: "8px",
     position: "relative",
-  },
-  close: {
-    marginTop: "1rem",
-    backgroundColor: "#dc3545",
-    color: "#fff",
-    padding: "0.5rem 1rem",
-    border: "none",
-    borderRadius: "4px",
-    cursor: "pointer",
   },
 };

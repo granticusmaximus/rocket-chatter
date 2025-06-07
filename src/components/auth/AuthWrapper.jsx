@@ -1,50 +1,43 @@
-
-
-import React from "react";
 import { Link } from "react-router-dom";
+import {
+  Container,
+  Row,
+  Col,
+  Card,
+  CardBody,
+  CardTitle,
+  Button,
+} from "reactstrap";
 
 const AuthWrapper = ({ children }) => {
   return (
-    <div style={styles.container}>
-      <div style={styles.box}>
-        <h1 style={styles.title}>🚀 Rocket</h1>
-        {children}
-        <div style={styles.links}>
-          <Link to="/login" style={styles.link}>Login</Link> |{" "}
-          <Link to="/register" style={styles.link}>Register</Link>
-        </div>
-      </div>
-    </div>
+    <Container className="vh-100 d-flex justify-content-center align-items-center bg-light">
+      <Row className="w-100 justify-content-center">
+        <Col xs="12" sm="8" md="6" lg="5">
+          <Card className="shadow-sm">
+            <CardBody className="text-center">
+              <CardTitle tag="h1" className="mb-4">
+                🚀 Rocket
+              </CardTitle>
+              {children}
+              <div className="mt-4">
+                <Link to="/login">
+                  <Button color="primary" outline size="sm" className="me-2">
+                    Login
+                  </Button>
+                </Link>
+                <Link to="/register">
+                  <Button color="primary" outline size="sm">
+                    Register
+                  </Button>
+                </Link>
+              </div>
+            </CardBody>
+          </Card>
+        </Col>
+      </Row>
+    </Container>
   );
-};
-
-const styles = {
-  container: {
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    height: "100vh",
-    backgroundColor: "#f5f5f5",
-  },
-  box: {
-    backgroundColor: "white",
-    padding: "2rem",
-    borderRadius: "8px",
-    boxShadow: "0 0 10px rgba(0,0,0,0.1)",
-    textAlign: "center",
-    width: "100%",
-    maxWidth: "400px",
-  },
-  title: {
-    marginBottom: "1rem",
-  },
-  links: {
-    marginTop: "1rem",
-  },
-  link: {
-    textDecoration: "none",
-    color: "#007bff",
-  },
 };
 
 export default AuthWrapper;

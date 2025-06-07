@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { Form, FormGroup, Label, Input, Button, Alert } from "reactstrap";
 
 export default function RegisterForm() {
     const { register } = useAuth();
@@ -29,35 +30,46 @@ export default function RegisterForm() {
     };
 
     return (
-        <form onSubmit={handleSubmit}>
-            <h2>Register</h2>
-            {error && <p style={{ color: "red" }}>{error}</p>}
-            <input
-                type="email"
-                placeholder="Email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-            /><br />
-            <input
-                type="password"
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-            /><br />
-            <input
-                type="password"
-                placeholder="Confirm Password"
-                value={confirm}
-                onChange={(e) => setConfirm(e.target.value)}
-                required
-            /><br />
-            <button type="submit">Register</button>
-
-            <p>
+        <Form onSubmit={handleSubmit}>
+            <h2 className="mb-4">Register</h2>
+            {error && <Alert color="danger">{error}</Alert>}
+            <FormGroup>
+                <Label for="registerEmail">Email</Label>
+                <Input
+                    id="registerEmail"
+                    type="email"
+                    placeholder="Enter your email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                />
+            </FormGroup>
+            <FormGroup>
+                <Label for="registerPassword">Password</Label>
+                <Input
+                    id="registerPassword"
+                    type="password"
+                    placeholder="Enter your password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                />
+            </FormGroup>
+            <FormGroup>
+                <Label for="registerConfirm">Confirm Password</Label>
+                <Input
+                    id="registerConfirm"
+                    type="password"
+                    placeholder="Confirm your password"
+                    value={confirm}
+                    onChange={(e) => setConfirm(e.target.value)}
+                    required
+                />
+            </FormGroup>
+            <Button color="primary" type="submit">Register</Button>
+            <p className="mt-3">
                 Already have an account? <a href="/login">Log in</a>
             </p>
-        </form>
+        </Form>
     );
 }

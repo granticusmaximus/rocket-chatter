@@ -1,6 +1,7 @@
 import { useAuth } from "../../context/AuthContext";
 import { useChat } from "../../context/ChatContext";
 import axios from "axios";
+import { Button } from "reactstrap";
 
 export default function CallControl() {
   const { currentUser } = useAuth();
@@ -45,9 +46,9 @@ export default function CallControl() {
   };
 
   return (
-    <button onClick={handleCall} style={styles.button}>
+    <Button onClick={handleCall} style={styles.button} color="primary">
       📞 Call
-    </button>
+    </Button>
   );
 }
 
@@ -55,10 +56,5 @@ const styles = {
   button: {
     marginBottom: "1rem",
     padding: "0.5rem 1rem",
-    backgroundColor: "#007bff",
-    color: "white",
-    border: "none",
-    borderRadius: "4px",
-    cursor: "pointer",
   },
 };

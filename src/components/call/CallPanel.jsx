@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import axios from "axios";
+import { Spinner } from "reactstrap";
 
 export default function CallPanel({ callId }) {
   const { currentUser } = useAuth();
@@ -80,8 +81,16 @@ export default function CallPanel({ callId }) {
 
   return (
     <div style={styles.container}>
-      <video ref={localVideoRef} autoPlay muted playsInline style={styles.video} />
-      <video ref={remoteVideoRef} autoPlay playsInline style={styles.video} />
+      {!stream ? (
+        <div style={styles.loading}>
+          <Spinner color="primary" />
+        </div>
+      ) : (
+        <>
+          <video ref={localVideoRef} autoPlay muted playsInline style={styles.video} />
+          <video ref={remoteVideoRef} autoPlay playsInline style={styles.video} />
+        </>
+      )}
     </div>
   );
 }
@@ -96,5 +105,12 @@ const styles = {
     width: "45%",
     borderRadius: "8px",
     border: "1px solid #ccc",
+  },
+  loading: {
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    width: "100%",
+    height: "300px",
   },
 };

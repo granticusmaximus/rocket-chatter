@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { Button } from "reactstrap";
 
 export default function LoginForm() {
   const { login } = useAuth();
@@ -39,7 +40,7 @@ export default function LoginForm() {
         onChange={(e) => setPassword(e.target.value)}
         required
       /><br />
-      <button type="submit">Login</button>
+      <Button color="primary" type="submit">Login</Button>
 
       <p>
         Don't have an account? <a href="/register">Register</a>
