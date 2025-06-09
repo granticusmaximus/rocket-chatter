@@ -1,4 +1,4 @@
-# React + Vite
+# React + Vite Information
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
@@ -75,6 +75,8 @@ rocket-chatter/
 
 - [x] Replace Firebase with SQLite
 - [x] Add video call support
+- [x] Direct Messaging
+- [x] Add group channels
 - [x] Implement read receipts
 - [x] Typing indicators
 - [ ] Notifications and sound alerts
