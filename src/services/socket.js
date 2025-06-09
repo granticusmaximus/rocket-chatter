@@ -1,14 +1,7 @@
-// Listen for "messageRead" events from the server
-socket.on("messageRead", ({ messageId, readerId }) => {
-  const event = new CustomEvent("messageRead", { detail: { messageId, readerId } });
-  window.dispatchEvent(event);
-});
-
-
 import { io } from "socket.io-client";
 
 // Replace with your backend server address
-const socket = io("http://localhost:5000", {
+const socket = io("http://localhost:5001", {
   transports: ["websocket"],
   withCredentials: true,
 });
@@ -18,9 +11,14 @@ socket.on("connect", () => {
   console.log("Connected to socket server:", socket.id);
 });
 
-
 socket.on("disconnect", () => {
   console.log("Disconnected from socket server");
+});
+
+// Listen for "messageRead" events from the server
+socket.on("messageRead", ({ messageId, readerId }) => {
+  const event = new CustomEvent("messageRead", { detail: { messageId, readerId } });
+  window.dispatchEvent(event);
 });
 
 // Typing indicators

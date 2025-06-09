@@ -1,3 +1,7 @@
+const express = require("express");
+const router = express.Router();
+const db = require("../db");
+
 // Notify that a user started screen sharing
 router.post("/:id/share-screen", (req, res) => {
   const callId = req.params.id;
@@ -30,9 +34,6 @@ router.post("/:id/share-screen", (req, res) => {
     );
   });
 });
-const express = require("express");
-const router = express.Router();
-const db = require("../db");
 
 // Create a new call
 router.post("/", (req, res) => {

@@ -1,7 +1,7 @@
 import socket from "../services/socket";
 import { createContext, useContext, useState, useEffect } from "react";
 
-const ChatContext = createContext();
+export const ChatContext = createContext();
 
 export function ChatProvider({ children }) {
   const [activeUser, setActiveUser] = useState(null);

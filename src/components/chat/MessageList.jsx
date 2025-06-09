@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { useChat } from "../../context/ChatContext";
-import { useSocket } from "../../services/socket";
+import socket from "../../services/socket";
 import axios from "axios";
 import { getConversationId } from "../../utils/helpers";
 import MessageItem from "./MessageItem";
@@ -11,7 +11,7 @@ export default function MessageList() {
   const { activeUser, activeChannel } = useChat();
   const [messages, setMessages] = useState([]);
   const [typingStatus, setTypingStatus] = useState(null);
-  const socket = useSocket();
+  // const socket is imported above
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
