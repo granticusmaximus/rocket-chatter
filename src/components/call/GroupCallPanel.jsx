@@ -11,190 +11,56 @@ export default function GroupCallPanel({ channelId, onClose }) {
   const peerConnections = useRef(new Map());
 
   const leaveCall = async () => {
-    const callDocRef = doc(db, "groupCalls", channelId);
     for (const pc of peerConnections.current.values()) {
+      // TODO: Close peer connection
       pc.close();
     }
     const localStream = localVideoRef.current?.srcObject;
     localStream?.getTracks().forEach((track) => track.stop());
 
-    await updateDoc(callDocRef, {
-      participants: arrayRemove(currentUser.uid),
+    await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/calls/${channelId}/leave`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId: currentUser.id }),
     });
 
     if (onClose) onClose();
   };
 
   useEffect(() => {
-    const localStreamPromise = navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-
-    const callDocRef = doc(db, "groupCalls", channelId);
-    let unsubscribeSnapshot;
-
-    const start = async () => {
-      const localStream = await localStreamPromise;
-      localVideoRef.current.srcObject = localStream;
-
-      // Join call
-      await updateDoc(callDocRef, {
-        participants: arrayUnion(currentUser.uid),
-      });
-
-      unsubscribeSnapshot = onSnapshot(callDocRef, async (snap) => {
-        const data = snap.data();
-        const screenSharer = data?.screenSharer;
-        if (screenSharer && screenSharer.uid !== currentUser.uid) {
-          showToast(`${screenSharer.name} is sharing their screen`, "info");
+    const startCall = async () => {
+      try {
+        const localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        if (localVideoRef.current) {
+          localVideoRef.current.srcObject = localStream;
         }
-        const participants = data?.participants || [];
-
-        for (const uid of participants) {
-          if (uid === currentUser.uid || peerConnections.current.has(uid)) continue;
-
-          // Create new peer connection
-          const pc = new RTCPeerConnection({
-            iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
-          });
-
-          peerConnections.current.set(uid, pc);
-          localStream.getTracks().forEach((track) => pc.addTrack(track, localStream));
-
-          pc.onicecandidate = (event) => {
-            if (event.candidate) {
-              setDoc(
-                callDocRef,
-                {
-                  iceCandidates: {
-                    [currentUser.uid]: arrayUnion(event.candidate.toJSON()),
-                  },
-                },
-                { merge: true }
-              );
-            }
-          };
-
-          pc.ontrack = (event) => {
-            setRemoteStreams((prev) => ({
-              ...prev,
-              [uid]: event.streams[0],
-            }));
-          };
-
-          // Offer
-          const offer = await pc.createOffer();
-          await pc.setLocalDescription(offer);
-
-          await setDoc(
-            callDocRef,
-            {
-              offers: {
-                [currentUser.uid]: offer,
-              },
-            },
-            { merge: true }
-          );
-        }
-
-        // Handle answers
-        const answers = data?.answers || {};
-        for (const [uid, answer] of Object.entries(answers)) {
-          const pc = peerConnections.current.get(uid);
-          if (pc && !pc.currentRemoteDescription && uid !== currentUser.uid) {
-            await pc.setRemoteDescription(new RTCSessionDescription(answer));
-          }
-        }
-
-        // Handle offers to us
-        const offers = data?.offers || {};
-        for (const [uid, offer] of Object.entries(offers)) {
-          if (uid === currentUser.uid || peerConnections.current.has(uid)) continue;
-
-          const pc = new RTCPeerConnection({
-            iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
-          });
-
-          peerConnections.current.set(uid, pc);
-          localStream.getTracks().forEach((track) => pc.addTrack(track, localStream));
-
-          pc.onicecandidate = (event) => {
-            if (event.candidate) {
-              setDoc(
-                callDocRef,
-                {
-                  iceCandidates: {
-                    [currentUser.uid]: arrayUnion(event.candidate.toJSON()),
-                  },
-                },
-                { merge: true }
-              );
-            }
-          };
-
-          pc.ontrack = (event) => {
-            setRemoteStreams((prev) => ({
-              ...prev,
-              [uid]: event.streams[0],
-            }));
-          };
-
-          await pc.setRemoteDescription(new RTCSessionDescription(offer));
-          const answer = await pc.createAnswer();
-          await pc.setLocalDescription(answer);
-
-          await setDoc(
-            callDocRef,
-            {
-              answers: {
-                [currentUser.uid]: answer,
-              },
-            },
-            { merge: true }
-          );
-        }
-
-        // Handle ICE
-        const iceCandidates = data?.iceCandidates || {};
-        for (const [uid, candidates] of Object.entries(iceCandidates)) {
-          if (uid === currentUser.uid) continue;
-          const pc = peerConnections.current.get(uid);
-          if (pc) {
-            for (const candidate of candidates) {
-              pc.addIceCandidate(new RTCIceCandidate(candidate));
-            }
-          }
-        }
-      });
+        // TODO: Initialize peer connections and add local stream to them
+      } catch (err) {
+        console.error("Failed to access camera/mic:", err);
+        showToast("Could not access camera or microphone");
+      }
     };
 
-    start();
+    startCall();
 
     return () => {
-      localStreamPromise.then((stream) => {
-        stream.getTracks().forEach((track) => track.stop());
-      });
-
-      for (const pc of peerConnections.current.values()) {
-        pc.close();
-      }
-
-      updateDoc(callDocRef, {
-        participants: arrayRemove(currentUser.uid),
-      });
-
-      unsubscribeSnapshot && unsubscribeSnapshot();
+      localVideoRef.current?.srcObject?.getTracks().forEach((track) => track.stop());
+      peerConnections.current.forEach((pc) => pc.close());
     };
-  }, [channelId, currentUser.uid]);
+  }, [channelId, currentUser.id]);
 
   // Share Screen handler
   const handleShareScreen = async () => {
     try {
       const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
       const screenTrack = screenStream.getVideoTracks()[0];
-      await updateDoc(doc(db, "groupCalls", channelId), {
-        screenSharer: {
-          uid: currentUser.uid,
-          name: currentUser.displayName || "Someone",
-        },
+      await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/calls/${channelId}/share-screen`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: currentUser.id,
+          userName: currentUser.displayName || "Someone",
+        }),
       });
       setScreenSharing(true);
 
@@ -202,7 +68,10 @@ export default function GroupCallPanel({ channelId, onClose }) {
       peerConnections.current.forEach((pc) => {
         const senders = pc.getSenders();
         const videoSender = senders.find((s) => s.track?.kind === "video");
-        if (videoSender) videoSender.replaceTrack(screenTrack);
+        if (videoSender) {
+          // TODO: Replace track in peer connection
+          videoSender.replaceTrack(screenTrack);
+        }
       });
 
       // Replace local preview
@@ -221,7 +90,10 @@ export default function GroupCallPanel({ channelId, onClose }) {
         peerConnections.current.forEach((pc) => {
           const senders = pc.getSenders();
           const videoSender = senders.find((s) => s.track?.kind === "video");
-          if (videoSender) videoSender.replaceTrack(webcamTrack);
+          if (videoSender) {
+            // TODO: Replace track in peer connection
+            videoSender.replaceTrack(webcamTrack);
+          }
         });
 
         localVideoRef.current.srcObject = webcamStream;
@@ -284,7 +156,9 @@ export default function GroupCallPanel({ channelId, onClose }) {
       {Object.entries(remoteStreams).map(([uid, stream]) => (
         <video
           key={uid}
-          srcObject={stream}
+          ref={(el) => {
+            if (el && stream) el.srcObject = stream;
+          }}
           autoPlay
           playsInline
           style={styles.video}

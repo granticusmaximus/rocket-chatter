@@ -1,37 +1,49 @@
-export default function MessageItem({ message }) {
-  const { sender, text, timestamp } = message;
+import { Card, CardBody, CardTitle } from "reactstrap";
+import classNames from "classnames";
+import { useChat } from "../../context/ChatContext";
+
+export default function MessageItem({ message, currentUserId }) {
+  const { sender, senderId, text, timestamp } = message;
+
+  const { readMessages } = useChat();
+
+  const isCurrentUser = senderId === currentUserId;
+
+  const isRead = readMessages.includes(message.id);
 
   const formattedTime = timestamp
     ? new Date(timestamp).toLocaleTimeString()
     : "";
 
   return (
-    <div style={styles.container}>
-      <div style={styles.header}>
-        <strong>{sender}</strong>
-        <span style={styles.time}>{formattedTime}</span>
-      </div>
-      <div style={styles.body}>{text}</div>
+    <div
+      className={classNames("d-flex", {
+        "justify-content-end": isCurrentUser,
+        "justify-content-start": !isCurrentUser,
+      })}
+    >
+      <Card
+        className={classNames("mb-2", {
+          "bg-primary text-white": isCurrentUser,
+          "bg-light": !isCurrentUser,
+        })}
+        style={{ maxWidth: "75%" }}
+      >
+        <CardBody>
+          <div className="d-flex justify-content-between">
+            <CardTitle tag="h6" className="mb-1">
+              {sender}
+            </CardTitle>
+            <small className="text-muted">{formattedTime}</small>
+          </div>
+          <p className="mb-0">{text}</p>
+          {isCurrentUser && (
+            <small className="text-end d-block mt-1 text-white-50">
+              {isRead ? "✔✔ Seen" : "✔ Sent"}
+            </small>
+          )}
+        </CardBody>
+      </Card>
     </div>
   );
 }
-
-const styles = {
-  container: {
-    padding: "0.5rem",
-    backgroundColor: "#f0f0f0",
-    borderRadius: "6px",
-  },
-  header: {
-    display: "flex",
-    justifyContent: "space-between",
-    fontSize: "0.85rem",
-    marginBottom: "0.25rem",
-  },
-  time: {
-    color: "#888",
-  },
-  body: {
-    fontSize: "1rem",
-  },
-};

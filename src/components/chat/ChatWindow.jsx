@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Container, Row, Col, Button } from "reactstrap";
 import MessageList from "./MessageList";
 import MessageInput from "./MessageInput";
 import CallControl from "../call/CallControl";
@@ -11,11 +12,9 @@ export default function ChatWindow() {
 
   if (!activeUser && !activeChannel) {
     return (
-      <div style={styles.window}>
-        <div style={styles.messageList}>
-          <p>Select a channel or user to start chatting</p>
-        </div>
-      </div>
+      <Container fluid className="p-3">
+        <p>Select a channel or user to start chatting</p>
+      </Container>
     );
   }
 
@@ -24,80 +23,37 @@ export default function ChatWindow() {
     : `Channel: ${activeChannel.name}`;
 
   return (
-    <div style={styles.window}>
-      <div style={styles.messageList}>
-        <div style={{ marginBottom: "1rem" }}>
-          <CallControl />
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <div style={{ fontWeight: "bold" }}>{headerTitle}</div>
-            {activeChannel && (
-              <>
-                {!showGroupCall ? (
-                  <button
-                    onClick={() => setShowGroupCall(true)}
-                    style={{
-                      marginLeft: "1rem",
-                      padding: "0.4rem 0.8rem",
-                      backgroundColor: "#007bff",
-                      color: "#fff",
-                      border: "none",
-                      borderRadius: "4px",
-                      cursor: "pointer",
-                    }}
-                  >
-                    Start Group Call
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => setShowGroupCall(false)}
-                    style={{
-                      marginLeft: "1rem",
-                      padding: "0.4rem 0.8rem",
-                      backgroundColor: "#dc3545",
-                      color: "#fff",
-                      border: "none",
-                      borderRadius: "4px",
-                      cursor: "pointer",
-                    }}
-                  >
-                    End Group Call
-                  </button>
-                )}
-              </>
-            )}
+    <Container fluid className="d-flex flex-column h-100 border-start bg-white">
+      <Row className="flex-grow-1 overflow-auto p-3">
+        <Col>
+          <div className="mb-3">
+            <CallControl />
+            <div className="d-flex justify-content-between align-items-center mt-2">
+              <strong>{headerTitle}</strong>
+              {activeChannel && (
+                <Button
+                  color={showGroupCall ? "danger" : "primary"}
+                  onClick={() => setShowGroupCall(!showGroupCall)}
+                >
+                  {showGroupCall ? "End Group Call" : "Start Group Call"}
+                </Button>
+              )}
+            </div>
           </div>
-        </div>
-        <MessageList />
-        {showGroupCall && (
-          <GroupCallPanel
-            channelId={activeChannel.id}
-            onClose={() => setShowGroupCall(false)}
-          />
-        )}
-      </div>
-      <div style={styles.messageInput}>
-        <MessageInput />
-      </div>
-    </div>
+          <MessageList />
+          {showGroupCall && (
+            <GroupCallPanel
+              channelId={activeChannel.id}
+              onClose={() => setShowGroupCall(false)}
+            />
+          )}
+        </Col>
+      </Row>
+      <Row className="border-top bg-light p-3">
+        <Col>
+          <MessageInput />
+        </Col>
+      </Row>
+    </Container>
   );
 }
-
-const styles = {
-  window: {
-    display: "flex",
-    flexDirection: "column",
-    height: "100%",
-    backgroundColor: "#fff",
-    borderLeft: "1px solid #ccc",
-  },
-  messageList: {
-    flex: 1,
-    padding: "1rem",
-    overflowY: "auto",
-  },
-  messageInput: {
-    borderTop: "1px solid #ccc",
-    padding: "1rem",
-    backgroundColor: "#f9f9f9",
-  },
-};

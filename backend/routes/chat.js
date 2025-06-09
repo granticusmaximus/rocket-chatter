@@ -1,5 +1,3 @@
-
-
 const express = require("express");
 const db = require("../db");
 
@@ -71,6 +69,38 @@ router.post("/messages", (req, res) => {
       res.json({ id: this.lastID, conversationId, senderId, content, timestamp });
     }
   );
+});
+
+
+// Mark a message as read by a user
+router.post("/messages/:id/read", (req, res) => {
+  const { id } = req.params;
+  const { userId } = req.body;
+
+  db.get("SELECT readBy FROM messages WHERE id = ?", [id], (err, row) => {
+    if (err) return res.status(500).json({ error: err.message });
+    if (!row) return res.status(404).json({ error: "Message not found" });
+
+    let readBy = [];
+    try {
+      readBy = JSON.parse(row.readBy || "[]");
+    } catch {
+      readBy = [];
+    }
+
+    if (!readBy.includes(userId)) {
+      readBy.push(userId);
+    }
+
+    db.run(
+      "UPDATE messages SET readBy = ? WHERE id = ?",
+      [JSON.stringify(readBy), id],
+      function (err) {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ message: "Message marked as read", readBy });
+      }
+    );
+  });
 });
 
 module.exports = router;

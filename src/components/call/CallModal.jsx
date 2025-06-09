@@ -11,17 +11,24 @@ export default function CallModal() {
   const { currentUser } = useAuth();
   const { showToast } = useToast();
 
+  const [isEnding, setIsEnding] = useState(false);
+
   const handleEndCall = async () => {
-    if (activeCallId) {
-      try {
-        await axios.delete(`http://localhost:5000/api/calls/${activeCallId}`);
-        showToast("Call ended", "info");
-      } catch (error) {
-        console.error("Error ending call:", error);
-        showToast("Failed to end call", "error");
-      }
+    if (!activeCallId) {
+      showToast("No active call ID found", "error");
+      return;
     }
-    setShowCallPanel(false);
+    setIsEnding(true);
+    try {
+      await axios.delete(`${import.meta.env.VITE_API_BASE_URL}/api/calls/${activeCallId}`);
+      showToast("Call ended", "info");
+    } catch (error) {
+      console.error("Error ending call:", error);
+      showToast("Failed to end call", "error");
+    } finally {
+      setIsEnding(false);
+      setShowCallPanel(false);
+    }
   };
 
   if (!showCallPanel || !activeCallId) return null;
@@ -30,8 +37,8 @@ export default function CallModal() {
     <div style={styles.backdrop}>
       <div style={styles.panel}>
         <CallPanel callId={activeCallId} />
-        <Button color="danger" onClick={handleEndCall}>
-          End Call
+        <Button color="danger" onClick={handleEndCall} disabled={isEnding}>
+          {isEnding ? "Ending..." : "End Call"}
         </Button>
       </div>
     </div>

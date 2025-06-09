@@ -1,7 +1,8 @@
 import { useAuth } from "../../context/AuthContext";
 import { useChat } from "../../context/ChatContext";
-import axios from "axios";
+import { createCall } from "../../services/callService";
 import { Button } from "reactstrap";
+import socket from "../../services/socket";
 
 export default function CallControl() {
   const { currentUser } = useAuth();
@@ -28,7 +29,7 @@ export default function CallControl() {
     const offer = await peerConnection.createOffer();
     await peerConnection.setLocalDescription(offer);
 
-    await axios.post("http://localhost:5000/api/calls", {
+    await createCall({
       callId,
       from: currentUser.uid,
       to: activeUser.uid,
@@ -41,6 +42,12 @@ export default function CallControl() {
 
     setActiveCallId(callId);
     setShowCallPanel(true);
+
+    socket.emit("start-call", {
+      callId,
+      from: currentUser.uid,
+      to: activeUser.uid,
+    });
 
     console.log("Call offer created");
   };

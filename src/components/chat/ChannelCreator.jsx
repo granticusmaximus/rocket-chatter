@@ -1,3 +1,4 @@
+import socket from "../../services/socket";
 import { useState } from "react";
 import axios from "axios";
 import { useAuth } from "../../context/AuthContext";
@@ -24,10 +25,14 @@ export default function ChannelCreator() {
 
     try {
       await axios.post("http://localhost:5000/api/channels", newChannel);
-      setActiveChannel({ ...newChannel, createdAt: new Date().toISOString() });
+      const channelWithTimestamp = { ...newChannel, createdAt: new Date().toISOString() };
+      setActiveChannel(channelWithTimestamp);
+      socket.emit("channelCreated", channelWithTimestamp);
+      alert("Channel created successfully!");
       setChannelName("");
     } catch (err) {
       console.error("Error creating channel:", err);
+      alert("Failed to create channel.");
     }
   };
 

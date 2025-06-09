@@ -6,8 +6,11 @@ const db = require("./db");
 const userRoutes = require("./routes/user");
 const callRoutes = require("./routes/calls");
 const chatRoutes = require("./routes/chat");
+const http = require("http");
+const { Server } = require("socket.io");
 
 const app = express();
+const server = http.createServer(app);
 const PORT = process.env.PORT || 5000;
 
 app.use(cors());
@@ -56,6 +59,65 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: "Internal Server Error" });
 });
 
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
+});
+
+const io = new Server(server, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"],
+  },
+});
+
+io.on("connection", (socket) => {
+  console.log("New client connected:", socket.id);
+
+  socket.on("join-call", ({ callId, userId }) => {
+    socket.join(callId);
+    socket.to(callId).emit("user-joined", { userId });
+  });
+
+  socket.on("signal", ({ callId, data }) => {
+    socket.to(callId).emit("signal", data);
+  });
+
+  socket.on("leave-call", ({ callId, userId }) => {
+    socket.to(callId).emit("user-left", { userId });
+    socket.leave(callId);
+  });
+
+  // Chat messaging support
+  socket.on("joinConversation", (conversationId) => {
+    socket.join(conversationId);
+    console.log(`User joined conversation: ${conversationId}`);
+  });
+
+  socket.on("leaveConversation", (conversationId) => {
+    socket.leave(conversationId);
+    console.log(`User left conversation: ${conversationId}`);
+  });
+
+  socket.on("newMessage", (message) => {
+    const { conversationId } = message;
+    socket.to(conversationId).emit("newMessage", message);
+    console.log("Broadcasted new message to:", conversationId);
+  });
+
+  socket.on("typing", ({ conversationId, userId }) => {
+    socket.to(conversationId).emit("typing", { userId });
+  });
+
+  socket.on("stopTyping", ({ conversationId, userId }) => {
+    socket.to(conversationId).emit("stopTyping", { userId });
+  });
+
+  socket.on("message_read", ({ conversationId, messageId, userId }) => {
+    console.log(`User ${userId} read message ${messageId} in conversation ${conversationId}`);
+    socket.to(conversationId).emit("message_read", { messageId, userId });
+  });
+
+  socket.on("disconnect", () => {
+    console.log("Client disconnected:", socket.id);
+  });
 });

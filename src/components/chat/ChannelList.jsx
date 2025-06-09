@@ -1,5 +1,9 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
+import { io } from "socket.io-client";
+import { ListGroup, ListGroupItem } from "reactstrap";
+
+const socket = io("http://localhost:5000");
 
 export default function ChannelList({ onSelectChannel }) {
   const [channels, setChannels] = useState([]);
@@ -16,27 +20,28 @@ export default function ChannelList({ onSelectChannel }) {
       .catch((err) => {
         console.error("Failed to fetch channels:", err);
       });
+
+    socket.on("channelCreated", (newChannel) => {
+      setChannels((prev) => [...prev, newChannel]);
+    });
+
+    return () => {
+      socket.off("channelCreated");
+    };
   }, []);
 
   return (
-    <div>
+    <ListGroup flush>
       {channels.map((channel) => (
-        <div
+        <ListGroupItem
           key={channel.id}
-          style={styles.item}
+          tag="button"
+          action
           onClick={() => onSelectChannel(channel)}
         >
           {channel.name}
-        </div>
+        </ListGroupItem>
       ))}
-    </div>
+    </ListGroup>
   );
 }
-
-const styles = {
-  item: {
-    padding: "0.5rem",
-    cursor: "pointer",
-    borderBottom: "1px solid #ddd",
-  },
-};

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { useAuth } from "../../context/AuthContext";
 import { useChat } from "../../context/ChatContext";
+import socket from "../../services/socket";
 
 export default function IncomingCallModal() {
   const { currentUser } = useAuth();
@@ -9,39 +10,33 @@ export default function IncomingCallModal() {
   const [incomingCall, setIncomingCall] = useState(null);
 
   useEffect(() => {
-    const interval = setInterval(async () => {
-      try {
-        const res = await axios.get(`http://localhost:5000/api/calls/incoming/${currentUser.uid}`);
-        if (res.data && res.data.length > 0 && !incomingCall) {
-          setIncomingCall(res.data[0]);
-        }
-      } catch (err) {
-        console.error("Error fetching incoming calls:", err);
+    const handleIncomingCall = (callData) => {
+      if (!incomingCall) {
+        setIncomingCall(callData);
       }
-    }, 3000);
+    };
 
-    return () => clearInterval(interval);
-  }, [currentUser.uid, incomingCall]);
+    socket.on("incoming-call", handleIncomingCall);
+
+    return () => {
+      socket.off("incoming-call", handleIncomingCall);
+    };
+  }, [incomingCall]);
 
   const handleAccept = async () => {
     try {
       setActiveUser({ uid: incomingCall.from });
       setActiveCallId(incomingCall.id);
       setShowCallPanel(true);
-      await axios.delete(`http://localhost:5000/api/calls/${incomingCall.id}`);
+      socket.emit("join-call", { callId: incomingCall.id, userId: currentUser.uid });
       setIncomingCall(null);
     } catch (err) {
       console.error("Error accepting call:", err);
     }
   };
 
-  const handleReject = async () => {
-    try {
-      await axios.delete(`http://localhost:5000/api/calls/${incomingCall.id}`);
-      setIncomingCall(null);
-    } catch (err) {
-      console.error("Error rejecting call:", err);
-    }
+  const handleReject = () => {
+    setIncomingCall(null);
   };
 
   if (!incomingCall) return null;

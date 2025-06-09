@@ -1,14 +1,24 @@
-
-
+import { useEffect, useState } from "react";
+import { ListGroup, ListGroupItem } from "reactstrap";
+import axios from "axios";
 import { useAuth } from "../../context/AuthContext";
 
 export default function DMList({ onSelectUser }) {
   const { currentUser } = useAuth();
+  const [users, setUsers] = useState([]);
 
-  const dummyUsers = [
-    { uid: "user1", displayName: "Alice" },
-    { uid: "user2", displayName: "Bob" },
-  ];
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const res = await axios.get("http://localhost:5000/api/users");
+        setUsers(res.data);
+      } catch (err) {
+        console.error("Failed to fetch users:", err);
+      }
+    };
+
+    fetchUsers();
+  }, []);
 
   const handleClick = (user) => {
     if (user.uid !== currentUser?.uid) {
@@ -17,24 +27,16 @@ export default function DMList({ onSelectUser }) {
   };
 
   return (
-    <div>
-      {dummyUsers.map((user) => (
-        <div
+    <ListGroup flush>
+      {users.map((user) => (
+        <ListGroupItem
           key={user.uid}
-          style={styles.item}
           onClick={() => handleClick(user)}
+          className="cursor-pointer"
         >
           {user.displayName}
-        </div>
+        </ListGroupItem>
       ))}
-    </div>
+    </ListGroup>
   );
 }
-
-const styles = {
-  item: {
-    padding: "0.5rem",
-    cursor: "pointer",
-    borderBottom: "1px solid #ddd",
-  },
-};
